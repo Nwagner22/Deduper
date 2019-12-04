@@ -11,14 +11,3 @@
 #SBATCH --mail-user=nwagner2@uoregon.edu
 #SBATCH --mail-type=all
 
-
-SAM_FILE='../deduper/Dataset2.sam'
-OUT_FILE='../Dataset2_sorted.sam'
-
-# MUST BE RAN AN HPC/TALAPAS environment
-ml easybuild  icc/2017.1.132-GCC-6.3.0-2.27  impi/2017.1.132
-ml SAMtools/1.8
-
-samtools view -S -b $SAM_FILE > out.bam
-samtools sort out.bam -o out_sorted.bam
-samtools view -h out_sorted.bam > $OUT_FILE
