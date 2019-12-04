@@ -1,5 +1,6 @@
 
 import string
+import re
 
 # FUNCTION to parse bitwise flag
 def parse_bitwise(bitwise_flag):                            
@@ -52,7 +53,7 @@ def get_five_prime_pos_and_read_length(CIGAR, leftmost, orientation):
                     'RV': Reverse orientation
 
         This function returns a list object containing the 5' position as well as the read length:
-        [five_prime_pos, read_length]
+        [five_prime_pos, read_length]  ## TODO implement read_length functionality
     """ 
     
     leftmost = int(leftmost)
@@ -60,92 +61,29 @@ def get_five_prime_pos_and_read_length(CIGAR, leftmost, orientation):
     read_length = 0
     current_num_string = ''
 
-    if( orientation == 'FW'): # Forward Orientation
-        leading_softclipping = False
+    cigar_list = re.findall(r'\d+[SMNID]', CIGAR)
 
-        for i in range(len(CIGAR)):
-            if(CIGAR[i] not in string.ascii_uppercase):
-                # Not an uppercase letter so add number to current_num_string
-                current_num_string = current_num_string + CIGAR[i]
-            else:
-                # Is one of the valid uppercase letters so turn current_num_string into an int
-                # evaluate it according to the current letter of the CIGAR string
-                current_int = int(current_num_string)
-                current_letter = CIGAR[i]
-
-                if(current_letter == 'S' and (i == 1 or i == 2)):
-                    # the current letter is leading soft-clipping    ADD to read length
-                    # we only care about leading soft clipping on forward reads
-                    read_length += current_int
-                    five_prime_pos = leftmost - current_int
-                    leading_softclipping = True
-                elif(current_letter == 'S' and (i != 1 and i != 2)):
-                    # taling soft clipping, add to read length
-                    read_length += current_int
-
-                if(current_letter == 'M'):
-                    # Add matched to read length
-                    read_length += current_int
-
-                if(current_letter == 'I'):
-                    # Insertion    ADD to read_length
-                    read_length += current_int
-
-                if(leading_softclipping == False):
-                    five_prime_pos = leftmost
-
-                current_num_string = ''
-    else: # Reverse Orientation
+    if(orientation == 'FW'): # Forward Orientation
+        if(cigar_list[0][-1] == 'S'):
+            five_prime_pos = leftmost - int(cigar_list[0][:-1])
+        else:
+            five_prime_pos = leftmost
+    else: # Reverse orientation
         reference_length = 0
 
-        for i in range(len(CIGAR)):
-            if(CIGAR[i] not in string.ascii_uppercase):
-                # Not an uppercase letter so add number to current_num_string
-                current_num_string = current_num_string + CIGAR[i]
-            else:
-                # Is one of the valid uppercase letters so turn current_num_string into an int
-                # evaluate it according to the current letter of the CIGAR string
-                current_int = int(current_num_string)
-                current_letter = CIGAR[i]
-
-                if(current_letter == 'S' and (i == 1 or i == 2)):
-                    # the current letter is leading soft-clipping
-                    # we ignore leading soft-clipping for reverse
-                    pass
-                elif(current_letter == 'S' and (i != 1 and i != 2)):
-                    # Add tailing soft clipping to reference length and read length
-                    reference_length += current_int
-                    read_length += current_int
-
-                if(current_letter == 'M'):
-                    # Add matched to reference length and read length
-                    reference_length += current_int
-                    read_length += current_int
-
-                if(current_letter == 'N'):
-                    # Add intron positions to reference length only
-                    reference_length += current_int
-
-                if(current_letter == 'I'):
-                    # Insertion    ADD to read_length and reference_length
-                    reference_length += current_int
-                    read_length += current_int
-                
-                if(current_letter == 'D'):
-                    # Deletion from reference    ADD to reference_length
-                    reference_length += current_int
-
-                current_num_string = ''
-
-        # evaluate five_prime_pos for reverse here
+        for i in range(len(cigar_list)):
+            if(cigar_list[i][-1] in ['M','N','I','D']):
+                reference_length += int(cigar_list[i][:-1])
+            if(cigar_list[-1][-1] == 'S'):
+                reference_length += int(cigar_list[-1][:-1])
         five_prime_pos = leftmost + reference_length
 
     return([five_prime_pos, read_length])                           
 # unit test:
 assert len(get_five_prime_pos_and_read_length('71M',200, 'FW')) == 2
-assert get_five_prime_pos_and_read_length('23M500N24M1D11M',100, 'RV') == [659,58]
-assert get_five_prime_pos_and_read_length('2S98M',102, 'FW') == [100,100]
-assert get_five_prime_pos_and_read_length('100M',100, 'FW') == [100,100]
+assert get_five_prime_pos_and_read_length('23M500N24M1D11M',100, 'RV') == [659,0]
+assert get_five_prime_pos_and_read_length('2S98M',102, 'FW') == [100,0]
+assert get_five_prime_pos_and_read_length('100M',100, 'FW') == [100,0]
 
 
 
@@ -162,16 +100,16 @@ def handle_forward(forward_record):
                 # forward_record[0]: header with UMIs   forward_record[1]: bitwise flag     forward_record[2]: chromosome    
                 # forward_record[3]: leftmost position    forward_record[4]: mapping quality    forward_record[5]: CIGAR string
 
-        This function returns a list object containing two things: 
-        [(chrom_number, five_prime_pos), read_length]
+        This function returns a list object containing three things: 
+        [chrom_number, five_prime_pos, read_length]
     """ 
 
     output = get_five_prime_pos_and_read_length(forward_record[5], forward_record[3], 'FW')
 
-    return([(forward_record[2], output[0]), output[1]])                           
+    return([forward_record[2], output[0], output[1]])                           
 # unit test:
-assert len(handle_forward(['Header',0,11,100,0,'100M'])) == 2
-assert handle_forward(['Header',0,11,100,0,'100M']) == [(11,100),100]
+assert len(handle_forward(['Header',0,11,100,0,'100M'])) == 3
+assert handle_forward(['Header',0,11,100,0,'100M']) == [11,100,0]
 
 
 # FUNCTION 
@@ -187,14 +125,14 @@ def handle_reverse(reverse_record):
                 # reverse_record[0]: header with UMIs   reverse_record[1]: bitwise flag     reverse_record[2]: chromosome    
                 # reverse_record[3]: leftmost position    reverse_record[4]: mapping quality    reverse_record[5]: CIGAR string
 
-        This function returns a list object containing two things: 
-        [(chrom_number, 5_prime_pos), read_length]
+        This function returns a list object containing three things: 
+        [chrom_number, 5_prime_pos, read_length]
     """ 
 
     output = get_five_prime_pos_and_read_length(reverse_record[5], reverse_record[3], 'RV')
 
 
-    return([(reverse_record[2], output[0]), output[1]])                             
+    return([reverse_record[2], output[0], output[1]])                             
 # unit test:
-assert len(handle_reverse(['Header',0,11,100,0,'100M'])) == 2
-assert handle_reverse(['Header',0,11,100,0,'23M500N24M1D11M']) == [(11,659),58]
+assert len(handle_reverse(['Header',0,11,100,0,'100M'])) == 3
+assert handle_reverse(['Header',0,11,100,0,'23M500N24M1D11M']) == [11,659,0]

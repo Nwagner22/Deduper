@@ -74,24 +74,21 @@ with open('Data/UMI96.txt', 'r') as umiFile:
     #
 
 
+
+
 with open(INPUT_SAM_FILE, 'r') as inFile:
+    duplication_counter = 0
+    total_counter = 0
+
     for line in inFile:
+        total_counter += 1
         if( line[0] == '@'):
             # write all initial headers to the output file here
-            for item in line:
-                OUT_FILE_FP.write(item)
-            OUT_FILE_FP.write('\n')
+            OUT_FILE_FP.write(line)
         else:
-            line = line.strip().split()     # line[0]: header with UMIs   line[1]: bitwise flag     line[2]: chromosome    line[3]: leftmost position    line[4]: mapping quality    line[5]: CIGAR string
-            # temp = re.search(r'.*:[0-9]{2,5}:[0-9]{2,5}:([A-Z]+)\^([A-Z]+)',line[0])  # extract UMIs        temp.group(1): first UMI     temp.group(2): second UMI
-            # umi = [temp.group(1), temp.group(2)]
-            temp = re.search(r'.*:([A-Z]+)',line[0])  # extract UMI        temp.group(1): first UMI
-            if(temp == None):
-                print(line[0])
-                umi = ''
-            else:
-                umi = temp.group(1)
-
+            line_list = line.strip().split()     # line[0]: header with UMIs   line[1]: bitwise flag     line[2]: chromosome    line[3]: leftmost position    line[4]: mapping quality    line[5]: CIGAR string
+            temp = re.search(r'.*:([A-Z]+)',line_list[0])  # extract UMI        temp.group(1): first UMI
+            umi = temp.group(1)
 
             # Check to see the UMIs are one of the 96 given
             if umi not in UMIS:
@@ -100,66 +97,46 @@ with open(INPUT_SAM_FILE, 'r') as inFile:
 
             # Each time the chromosome number changes I clear the memory from my two SEEN_DICTs
             # to prevent over-use of RAM
-            if(line[2] != CHROM_NUMBER):
+            if(line_list[2] != CHROM_NUMBER):
                 # clear the contents of SEEN_DICT
                 SEEN_FORWARD_DICT = {}
                 SEEN_REVERSE_DICT = {}
-                
-
-            CHROM_NUMBER = line[2]
+                CHROM_NUMBER = line_list[2]
 
             
-            ### STEP 1
             # this is where I will do my checks and the bulk of the algorithm
-            bool_list = helpers.parse_bitwise(line[1])    # pass bitwise flag from current record to parse_bitwise() function
-
+            bool_list = helpers.parse_bitwise(line_list[1])    # pass bitwise flag from current record to parse_bitwise() function
 
 
             # I will now check to make sure it was mapped and also check its orientation
             if(bool_list[0] == True):  # read was successfully mapped
                 if(bool_list[1] == True):  # reverse orientation
                     # Here is where I pass on the full record to the function that handles the reverse orientation records
-                    output = helpers.handle_reverse(line)
-                    tup_key = output[0]
-                    if(tup_key in SEEN_REVERSE_DICT.keys()):
+                    output = helpers.handle_reverse(line_list)
+                    tup_key = (output[1], umi)
+                    if(tup_key in SEEN_REVERSE_DICT):
                         # the key (chrom_number, 5' pos) was already in the dictionary
                         # now ckeck and see if the current umi is in the list of values
-                        if(umi in SEEN_REVERSE_DICT[tup_key]):
-                            # if the umi is already in the list of values for this key then the read is a duplicate and nothing happens with this record
-                            pass
-                        else:
-                            # add the umi to list of values and write the record out to the file
-                            SEEN_REVERSE_DICT[tup_key].append(umi)
-                            OUT_FILE_FP.write(line[0] + '\t' + line[1] + '\t' + line[2] + '\t' + line[3] + '\t' + line[4] + '\t' + line[0] + '\t' + line[0] + '\t' + line[0] + '\t')
+                        duplication_counter += 1
+                        pass
                     else:
                         # The key was not in the dictionary at all, write to file and add tup_key to dictionary and initialize value as a list with umi inside
-                        for item in line:
-                            OUT_FILE_FP.write(item)
-                        OUT_FILE_FP.write('\n')
-                        SEEN_REVERSE_DICT[tup_key] = [umi]
+                        OUT_FILE_FP.write(line)
+                        SEEN_REVERSE_DICT[tup_key] = [1]
                         
 
                 else:                       # forward orientation
                     # Here is where I pass on the full record to the function that handles the forward orientation records
-                    output = helpers.handle_forward(line)
-                    tup_key = output[0]
-                    if(tup_key in SEEN_FORWARD_DICT.keys()):
+                    output = helpers.handle_forward(line_list)
+                    tup_key = (output[1], umi)
+                    if(tup_key in SEEN_FORWARD_DICT):
                         # the key (chrom_number, 5' pos) was already in the dictionary
                         # now ckeck and see if the current umi is in the list of values
-                        if(umi in SEEN_FORWARD_DICT[tup_key]):
-                            # if the umi is already in the list of values for this key then the read is a duplicate and nothing happens with this record
-                            pass
-                        else:
-                            # add the umi to list of values and write the record out to the file
-                            SEEN_FORWARD_DICT[tup_key].append(umi)
-                            for item in line:
-                                OUT_FILE_FP.write(item)
-                            OUT_FILE_FP.write('\n')
+                        duplication_counter += 1
+                        pass
                     else:
                         # The key was not in the dictionary at all, write to file and add tup_key to dictionary and initialize value as a list with umi inside
-                        for item in line:
-                            OUT_FILE_FP.write(item)
-                        OUT_FILE_FP.write('\n')
+                        OUT_FILE_FP.write(line)
                         SEEN_FORWARD_DICT[tup_key] = [umi]
                         
             else:   # The read did not map, DO NOTHING
@@ -180,4 +157,17 @@ with open(INPUT_SAM_FILE, 'r') as inFile:
             # IF the UMI was not already one of the values, add it to the list of UMIs and write
             # the whole line to the file  OUT_FILE_FP.write(line)
 
+print('Removed ' + str(duplication_counter) + ' duplicates' )
+
 OUT_FILE_FP.close()
+
+
+
+
+                        # if(umi in SEEN_FORWARD_DICT[tup_key]):
+                        #     # if the umi is already in the list of values for this key then the read is a duplicate and nothing happens with this record
+                        #     pass
+                        # else:
+                        #     # add the umi to list of values and write the record out to the file
+                        #     SEEN_FORWARD_DICT[tup_key].append(umi)
+                        #     OUT_FILE_FP.write(line)
