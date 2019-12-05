@@ -5,9 +5,10 @@ To run Deduper use the command **python wagner_deduper.py** in combination with 
 
 
 ### Flags:
-* -s: Use to specify the file path to the sam file to be de-duplicated  REQUIRED
+* -f: Use to specify the file path to the sam file to be de-duplicated  REQUIRED
 * -o: Use to specify the extention to the input file name.  DEFAULT: _deduped.sam
 * -u: Use to specify the file path to the file containing known UMIs  DEFAULT: UMI96.txt
+* -h: Help
 
 ### Required packages:
 * re (regular expressions)
