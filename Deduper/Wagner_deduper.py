@@ -21,14 +21,15 @@ import deduper_functions as helpers   # import the functions I created to help w
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="A program to deduplicate PCR duplicates")
-    parser.add_argument("-s", "--sam", help="use to specify the sam file to deduplicate", required=False, type = str)
-    parser.add_argument("-o", "--output", help="Use to specify the output file name/path", default='_deduped.sam', type=str)
-    parser.add_argument("-u", "--umi", help="Use to specify the umi file name/path", default='UMI96.txt', type=str)
+    parser = argparse.ArgumentParser(add_help=False, description="A program to deduplicate PCR duplicates")
+    parser.add_argument("-f", "--file", help="use to specify the sam file to deduplicate", required=False, type = str)
+    parser.add_argument("-o", "--output", help="Use to specify the output file name/path  DEFAULT = '_deduped.sam'", default='_deduped.sam', type=str)
+    parser.add_argument("-u", "--umi", help="Use to specify the umi file name/path  DEFAULT = 'UMI96.txt'", default='UMI96.txt', type=str)
+    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS )#help="-s: Use to specify the file path to the sam file to be de-duplicated  REQUIRED\n-o: Use to specify the extention to the input file name.  DEFAULT: _deduped.sam\n-u: Use to specify the file path to the file containing known UMIs  DEFAULT: UMI96.txt")
     return parser.parse_args()
 
 args = get_args()               # calls get_args method from above assigns the arguments to args
-INPUT_SAM_FILE = args.sam          # assigning sam file path as string to global variable
+INPUT_SAM_FILE = args.file          # assigning sam file path as string to global variable
 UMI_FILE_PATH = args.umi
 FILE_NAME = INPUT_SAM_FILE.split('/')[-1]
 OUTPUT_PATH = FILE_NAME[:-4] + args.output       # building and assigning output file path as string to global variable     example: sorted_deduped.sam
