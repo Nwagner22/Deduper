@@ -165,11 +165,8 @@ OUT_FILE_FP.close()
 
 
 
-
-                        # if(umi in SEEN_FORWARD_DICT[tup_key]):
-                        #     # if the umi is already in the list of values for this key then the read is a duplicate and nothing happens with this record
-                        #     pass
-                        # else:
-                        #     # add the umi to list of values and write the record out to the file
-                        #     SEEN_FORWARD_DICT[tup_key].append(umi)
-                        #     OUT_FILE_FP.write(line)
+## TODO:
+# Single-end vs paired-end
+# Known UMIs vs randomers
+# Choice of duplicate written to file
+# You may include an additional argument to designate output of a different read (highest quality or random or ???)

@@ -15,8 +15,8 @@ dedupifier_path='/projects/bgmp/nwagner2/Genom_research_lab/Assignments/Deduper/
 dataset_path='/projects/bgmp/nwagner2/Genom_research_lab/Assignments/Deduper'
 UMI_path='/projects/bgmp/nwagner2/Genom_research_lab/Assignments/Deduper/Data/UMI96.txt'
 
-/usr/bin/time -v python $dedupifier_path/dedupifier.py -s $dataset_path/Dataset1_sorted.sam -u $UMI_path
+/usr/bin/time -v python $dedupifier_path/Wagner_deduper.py -s $dataset_path/Dataset1_sorted.sam -u $UMI_path
 
-/usr/bin/time -v python $dedupifier_path/dedupifier.py -s $dataset_path/Dataset2_sorted.sam -u $UMI_path
+/usr/bin/time -v python $dedupifier_path/Wagner_deduper.py -s $dataset_path/Dataset2_sorted.sam -u $UMI_path
 
-/usr/bin/time -v python $dedupifier_path/dedupifier.py -s $dataset_path/Dataset3_sorted.sam -u $UMI_path
+/usr/bin/time -v python $dedupifier_path/Wagner_deduper.py -s $dataset_path/Dataset3_sorted.sam -u $UMI_path
