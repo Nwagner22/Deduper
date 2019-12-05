@@ -17,6 +17,7 @@
 import argparse
 import os    # operating system
 import re    # regular expressions
+import sys
 import deduper_functions as helpers   # import the functions I created to help with deduplication
 
 
@@ -25,12 +26,14 @@ def get_args():
     parser.add_argument("-f", "--file", help="use to specify the sam file to deduplicate", required=False, type = str)
     parser.add_argument("-o", "--output", help="Use to specify the output file name/path  DEFAULT = '_deduped.sam'", default='_deduped.sam', type=str)
     parser.add_argument("-u", "--umi", help="Use to specify the umi file name/path  DEFAULT = 'UMI96.txt'", default='UMI96.txt', type=str)
-    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS )#help="-s: Use to specify the file path to the sam file to be de-duplicated  REQUIRED\n-o: Use to specify the extention to the input file name.  DEFAULT: _deduped.sam\n-u: Use to specify the file path to the file containing known UMIs  DEFAULT: UMI96.txt")
+    parser.add_argument("-p", "--paired", help="NOT YET IMPLEMENTED", type=bool, default=False)
+    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS )
     return parser.parse_args()
 
 args = get_args()               # calls get_args method from above assigns the arguments to args
 INPUT_SAM_FILE = args.file          # assigning sam file path as string to global variable
 UMI_FILE_PATH = args.umi
+PAIR_BOOL = args.paired
 FILE_NAME = INPUT_SAM_FILE.split('/')[-1]
 OUTPUT_PATH = FILE_NAME[:-4] + args.output       # building and assigning output file path as string to global variable     example: sorted_deduped.sam
 
@@ -42,6 +45,10 @@ UMIS = []
 
 OUT_FILE_FP = open(OUTPUT_PATH, 'w')    # filepointer associated with my output file
 
+
+if(PAIR_BOOL == True):
+    print("Paired-end feature not yet implemented")
+    sys.exit()
 
 # Read in all of the 96 given UMIs into list data structure
 with open(UMI_FILE_PATH, 'r') as umiFile:
