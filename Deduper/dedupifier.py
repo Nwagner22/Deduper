@@ -24,10 +24,12 @@ def get_args():
     parser = argparse.ArgumentParser(description="A program to deduplicate PCR duplicates")
     parser.add_argument("-s", "--sam", help="use to specify the sam file to deduplicate", required=False, type = str)
     parser.add_argument("-o", "--output", help="Use to specify the output file name/path", default='_deduped.sam', type=str)
+    parser.add_argument("-u", "--umi", help="Use to specify the umi file name/path", default='UMI96.txt', type=str)
     return parser.parse_args()
 
 args = get_args()               # calls get_args method from above assigns the arguments to args
 INPUT_SAM_FILE = args.sam          # assigning sam file path as string to global variable
+UMI_FILE_PATH = args.umi
 FILE_NAME = INPUT_SAM_FILE.split('/')[-1]
 OUTPUT_PATH = FILE_NAME[:-4] + args.output       # building and assigning output file path as string to global variable     example: sorted_deduped.sam
 
@@ -41,7 +43,7 @@ OUT_FILE_FP = open(OUTPUT_PATH, 'w')    # filepointer associated with my output 
 
 
 # Read in all of the 96 given UMIs into list data structure
-with open('Data/UMI96.txt', 'r') as umiFile:
+with open(UMI_FILE_PATH, 'r') as umiFile:
     for line in umiFile:
         line = line.strip().split()
         UMIS.append(line[0])

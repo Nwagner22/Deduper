@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+#SBATCH --account=bgmp          ### SLURM account which will be charged for the job
+#SBATCH --partition=bgmp        ### Partition (like a queue in PBS)
+#SBATCH --job-name=sam-bam          ### Job Name
+#SBATCH --output=slurm-%j-%x.out          ### File in which to store job output
+#SBATCH --time=0-01:00:00       ### Wall clock time limit in Days-HH:MM:SS
+#SBATCH --nodes=1               ### Node count required for the job
+#SBATCH --ntasks-per-node=1     ### Nuber of tasks to be launched per Node
+#SBATCH --cpus-per-task=4       ### Number of cpus (cores) per task
+#SBATCH --mail-user=nwagner2@uoregon.edu
+#SBATCH --mail-type=all
+
+dedupifier_path='/projects/bgmp/nwagner2/Genom_research_lab/Assignments/Deduper/Deduper'
+dataset_path='/projects/bgmp/nwagner2/Genom_research_lab/Assignments/Deduper'
+UMI_path='/projects/bgmp/nwagner2/Genom_research_lab/Assignments/Deduper/Data/UMI96.txt'
+
+/usr/bin/time -v python $dedupifier_path/dedupifier.py -s $dataset_path/Dataset1_sorted.sam -u $UMI_path
+
+/usr/bin/time -v python $dedupifier_path/dedupifier.py -s $dataset_path/Dataset2_sorted.sam -u $UMI_path
+
+/usr/bin/time -v python $dedupifier_path/dedupifier.py -s $dataset_path/Dataset3_sorted.sam -u $UMI_path
